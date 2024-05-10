@@ -1,0 +1,83 @@
+---
+title: "Replication website"
+bibliography: references.bib
+output: 
+  html_document:
+    css: tweaks.css
+    toc:  false
+    toc_float: true
+    number_sections: false
+    code_download: false
+---
+
+
+```{r, globalsettings, echo=FALSE, warning=FALSE, results='hide'}
+library(knitr)
+
+knitr::opts_chunk$set(echo = TRUE)
+opts_chunk$set(tidy.opts=list(width.cutoff=100),tidy=TRUE, warning = FALSE, message = FALSE,comment = "#>", cache=TRUE, class.source=c("test"), class.output=c("test2"))
+options(width = 100)
+rgl::setupKnitr()
+
+colorize <- function(x, color) {sprintf("<span style='color: %s;'>%s</span>", color, x) }
+```
+
+```{r klippy, echo=FALSE, include=TRUE}
+klippy::klippy(position = c('top', 'right'))
+#klippy::klippy(color = 'darkred')
+#klippy::klippy(tooltip_message = 'Click to copy', tooltip_success = 'Done')
+```
+
+
+
+
+----
+
+:::::::::::::: {.columns}
+::: {.column width="50%"}
+
+# **Replication website**
+### *The impact of social networks on continued sports participation among students*
+Last compiled on `r format(Sys.time(), '%B, %Y')`
+
+<br>
+
+----
+  
+
+:::
+::: {.column width="50%"}
+
+
+:::
+::::::::::::::
+
+This website is a replication package/lab journal for the paper on network influence on student sport participation by @Franken2023. It contains R code.
+
+Use the top menu to navigate through the sections.
+
+
+<!--
+Click <a href="https://netchange.netlify.app/codebook.pdf" target="_blank">here</a> to load the codebook.
+-->
+
+----
+
+## Contact  
+
+Questions can be addressed to ***
+
+<!---
+<a href="mailto:rob.franken@ru.nl">Rob Franken</a>.
+
+-->
+  
+----
+
+## References
+
+
+
+
+
+
