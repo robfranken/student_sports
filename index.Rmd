@@ -1,6 +1,7 @@
 ---
 title: "Replication website"
 bibliography: references.bib
+link-citations: true
 output: 
   html_document:
     css: tweaks.css
@@ -37,7 +38,7 @@ klippy::klippy(position = c('top', 'right'))
 ::: {.column width="50%"}
 
 # **Replication website**
-### *The impact of social networks on continued sports participation among students*
+### *Long-term social network effects on fitness attendance?*
 Last compiled on `r format(Sys.time(), '%B, %Y')`
 
 <br>
@@ -52,7 +53,7 @@ Last compiled on `r format(Sys.time(), '%B, %Y')`
 :::
 ::::::::::::::
 
-This website is a replication package/lab journal for the paper on network influence on student sport participation by @Franken2023. It contains R code.
+This website is a replication package/lab journal for the paper on network influence on student fitness attendance by @Franken2023. It contains R code.
 
 Use the top menu to navigate through the sections.
 
@@ -65,12 +66,8 @@ Click <a href="https://netchange.netlify.app/codebook.pdf" target="_blank">here<
 
 ## Contact  
 
-Questions can be addressed to ***
+Questions can be addressed to <a href="mailto:rob.franken@ru.nl">Rob Franken</a>.
 
-<!---
-<a href="mailto:rob.franken@ru.nl">Rob Franken</a>.
-
--->
   
 ----
 

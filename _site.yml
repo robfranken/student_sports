@@ -17,10 +17,12 @@ navbar:
     - icon: far fa-file-code
       text: "Preparation"
       href: prep.html
-  
-#  right:
-#    - icon: fab fa-github
-#      href: https://github.com/robfranken/student_sports
+    - icon: fa fa-bar-chart
+      text: "Analyses"
+      href: analyse.html
+  right:
+    - icon: fab fa-github
+      href: https://github.com/robfranken/student_sports
 output:
   html_document:
     theme: flatly

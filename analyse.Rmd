@@ -1,0 +1,227 @@
+---
+title: "Analysis"
+bibliography: references.bib
+link-citations: true
+date: "Last compiled on `r format(Sys.time(), '%B, %Y')`"
+output: 
+  html_document:
+    css: tweaks.css
+    toc:  true
+    toc_float: true
+    number_sections: true
+    toc_depth: 2
+    code_folding: show
+    code_download: yes
+---
+
+```{r, globalsettings, echo=FALSE, warning=FALSE, results='hide',message=FALSE}
+library(knitr)
+library(tidyverse)
+knitr::opts_chunk$set(echo = TRUE)
+opts_chunk$set(tidy.opts=list(width.cutoff=100),tidy=TRUE, warning = FALSE, message = FALSE,comment = "#>", cache=TRUE, class.source=c("test"), class.output=c("test3"))
+options(width = 100)
+rgl::setupKnitr()
+
+colorize <- function(x, color) {sprintf("<span style='color: %s;'>%s</span>", color, x) }
+```
+
+
+```{r klippy, echo=FALSE, include=TRUE}
+klippy::klippy(position = c('top', 'right'))
+#klippy::klippy(color = 'darkred')
+#klippy::klippy(tooltip_message = 'Click to copy', tooltip_success = 'Done')
+```
+
+
+
+---  
+  
+# Getting started
+
+To copy the code, click the button in the upper right corner of the code-chunks.
+
+## clean up
+
+```{r, eval=FALSE, results='hide'}
+rm(list=ls())
+gc()
+```
+
+<br>
+
+## general custom functions
+
+- `fpackage.check`: Check if packages are installed (and install if not) in R
+- `fsave`: Function to save data with time stamp in correct directory
+- `fload`: Function to load R-objects under new names
+- `ftheme`: pretty ggplot2 theme
+- `fshowdf`: Print objects (`tibble` / `data.frame`) nicely on screen in `.Rmd`.
+
+```{r}
+fpackage.check <- function(packages) {
+    lapply(packages, FUN = function(x) {
+        if (!require(x, character.only = TRUE)) {
+            install.packages(x, dependencies = TRUE)
+            library(x, character.only = TRUE)
+        }
+    })
+}
+
+fsave <- function(x, file, location = "./data/processed/", ...) {
+    if (!dir.exists(location))
+        dir.create(location)
+    datename <- substr(gsub("[:-]", "", Sys.time()), 1, 8)
+    totalname <- paste(location, datename, file, sep = "")
+    print(paste("SAVED: ", totalname, sep = ""))
+    save(x, file = totalname)
+}
+
+fload  <- function(fileName){
+  load(fileName)
+  get(ls()[ls() != "fileName"])
+}
+
+#extrafont::font_import(paths = c("C:/Users/u244147/Downloads/Jost/", prompt = FALSE))
+ftheme <- function() {
+  
+  #download font at https://fonts.google.com/specimen/Jost/
+  theme_minimal(base_family = "Jost") +
+    theme(panel.grid.minor = element_blank(),
+          plot.title = element_text(family = "Jost", face = "bold"),
+          axis.title = element_text(family = "Jost Medium"),
+          axis.title.x = element_text(hjust = 0),
+          axis.title.y = element_text(hjust = 1),
+          strip.text = element_text(family = "Jost", face = "bold",
+                                    size = rel(0.75), hjust = 0),
+          strip.background = element_rect(fill = "grey90", color = NA),
+          legend.position = "bottom")
+}
+
+fshowdf <- function(x, digits = 2, ...) {
+    knitr::kable(x, digits = digits, "html", ...) %>%
+        kableExtra::kable_styling(bootstrap_options = c("striped", "hover")) %>%
+        kableExtra::scroll_box(width = "100%", height = "300px")
+}
+```
+
+<br>
+
+
+## necessary packages
+
+- `tidyverse`
+- `lme4`: fitting random effects models
+- `lmtest`: diagnostics test (likelihood ratio test)
+- `car`: companion applied regression (calculate VIF)
+- `texreg`: output to HTML table
+
+
+```{r, results='hide', message=FALSE, warning=FALSE}
+packages = c("tidyverse", "lme4","lmtest","car","texreg")
+fpackage.check(packages)
+rm(packages)
+``` 
+
+<br>
+
+## load data-set
+
+Load the replicated data-set. To load these file, adjust the filename in the following code so that it matches the most recent version of the `.RDa` file you have in your `./data/processed/` folder.
+
+You may also obtain them by downloading: `r xfun::embed_file("./data shared/netbehdata.Rda")`
+
+
+```{r, results = 'hide'}
+#list files in processed data folder
+list.files("./data/processed/")
+
+#get todays date:
+today <- gsub("-", "", Sys.Date())
+
+#use fload
+df <- fload(paste0("./data/processed/", today, "netbehdata.Rda"))
+```
+
+
+
+<br>
+
+# descriptives
+
+```{r, des}
+df$uni <- ifelse(df$education == "7", 1, 0)
+df$ego_fitness_freq <- ifelse(df$ego_fitness > .99, 1, 0)
+
+rbind(
+  df %>%
+  select(c("nfitp", "uni", "age", "female", "ego_fitness_freq", "nfitness", "nother")) %>%
+  psych::describe(),
+  df %>%
+  filter(df$nfitp>0 & !is.na(df$avFreq)) %>%
+  select(c("propFriend", "avFreq")) %>%
+  psych::describe()
+) -> table
+row.names(table) <- c("no. of fitness partners", "research university student", "age in years", "female", "active in fitness ≥ 1 per week (baseline)", "total fitness sessions", "total other sports activities", "% best friends", "avg. fitness frequency alters")
+
+table %>%
+  select(-c(1,6,7,10:13)) %>%
+  fshowdf()
+
+
+```
+
+<br>
+
+  
+
+# Regression
+
+```{r, regression, eval = FALSE}
+#full sample; effect of network size (0-5)
+m1 <- lm(nfitness ~ nfitp, data = df )
+summary(m1)
+
+#include demographic controls:
+m2 <- lm(nfitness ~ nfitp + uni + age + female, data = df )
+summary(m2)
+
+#also control for ego's fitness frequency at baseline (6 months before holiday): 1=once per week or more frequently; 0=less than once per week;
+
+m3 <- lm(nfitness ~ nfitp + uni + age + female + ego_fitness_freq + nother, data = df )
+summary(m3)
+
+######################
+#to study the effect of the composition of the network, we subset the respondents with at least one fitness partner
+#composition measures for netsize==0 are 0 by design...
+
+m4 <- lm(nfitness ~ nfitp, data = df[df$nfitp>0 & !is.na(df$avFreq),] )
+summary(m4)
+
+m5 <- lm(nfitness ~ nfitp + uni + age + female, data = df[df$nfitp>0 & !is.na(df$avFreq),])
+summary(m5)
+
+m6 <- lm(nfitness ~ nfitp + uni + age + female + ego_fitness_freq + nother, data = df[df$nfitp>0 & !is.na(df$avFreq),] )
+summary(m6)
+
+m7 <- lm(nfitness ~ nfitp + uni + age + female + ego_fitness_freq + nother + avFreq + propFriend, data = df[df$nfitp>0 & !is.na(df$avFreq),] )
+summary(m7)
+``` 
+
+```{r, eval = FALSE, echo=FALSE}
+?htmlreg
+texreg::htmlreg(list(m1,m2,m3,m4,m5,m6,m7),
+                file = "./results/coeftab.html",
+                caption = "OLS regression effects on total fitness sessions",
+                caption.above = TRUE,
+                custom.coef.names = c("(Intercept)", "Network size", "Research university", "Age", "Female", "Fitness ≥ 1 per week (baseline)", "Frequency other activities", "Avg. Frequency alters", "Prop. Best friends"),
+                reorder.coef = c(1,2,8,9,3,4,5,6,7),
+        digits=2, single.row = TRUE
+        )
+``` 
+
+```{r, echo = FALSE}
+htmltools::tags$div(
+  style = "height: 600px; overflow-y: scroll;",
+  htmltools::includeHTML("./results/coeftab.html")
+)
+```
