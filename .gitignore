@@ -50,4 +50,5 @@ po/*~
 /working_scripts/
 #local files
 /local/
+/archive/
 
